@@ -1,4 +1,7 @@
-HyperFleet Gateway: Request FlowThis diagram illustrates the complete request flow in edge+api mode, demonstrating early header mutation, validation by Authorino, the generation of the wristband (JWT), and database tenancy isolation.sequenceDiagram
+# HyperFleet Gateway: Request Flow
+
+```mermaid
+sequenceDiagram
     autonumber
     participant Client
     participant Envoy as Envoy Gateway
@@ -6,26 +9,26 @@ HyperFleet Gateway: Request FlowThis diagram illustrates the complete request fl
     participant API as HyperFleet API
     participant DB as Database
 
-    Client->>Envoy: Request with Auth Header (and possible forged headers)
-    Note over Envoy: Early header mutation<br/>(Strips client-supplied x-tenant-* and x-hyperfleet-* headers)
-    Envoy->>Authorino: ext_authz Check (over gRPC/TLS)
+    Client->>Envoy: Requisição com Auth Header (e possíveis cabeçalhos falsos)
+    Note over Envoy: Early header mutation<br/>(Remove cabeçalhos x-tenant-* e x-hyperfleet-* do cliente)
+    Envoy->>Authorino: ext_authz Check (via gRPC/TLS)
     
     rect rgb(240, 248, 255)
-        Note over Authorino: Authentication Pipeline
-        Authorino->>Authorino: Validates Credential (OIDC or TokenReview based on Scheme)
-        Authorino->>Authorino: Maps Tenant Dimensions & Identity
-        Authorino->>Authorino: Mints Wristband (Signed JWT)
+        Note over Authorino: Pipeline de Autenticação
+        Authorino->>Authorino: Valida Credencial (OIDC ou TokenReview baseado no Scheme)
+        Authorino->>Authorino: Mapeia Tenant Dimensions & Identity
+        Authorino->>Authorino: Gera o Wristband (Signed JWT)
     end
     
-    Authorino-->>Envoy: Allow + Injected Headers (x-tenant-*, hf_system) + Wristband
-    Envoy->>API: Forwards Request over TLS (Trusted Headers + Wristband)
+    Authorino-->>Envoy: Allow + Injeção de Headers (x-tenant-*, hf_system) + Wristband
+    Envoy->>API: Encaminha Requisição sobre TLS (Headers confiáveis + Wristband)
     
     rect rgb(240, 255, 240)
-        Note over API: In-app Validation
-        API->>API: JWT Middleware (Validates exclusively the Wristband)
-        API->>API: Tenant Middleware (Extracts scope via headers/claims)
+        Note over API: Validação in-app
+        API->>API: JWT Middleware (Valida exclusivamente o Wristband)
+        API->>API: Tenant Middleware (Extrai scope via headers/claims)
     end
     
-    API->>DB: Query with containment filter (tenancy @> caller_map)
-    DB-->>API: Tenant-scoped data
-    API-->>Client: Tenant-scoped response
+    API->>DB: Query com filtro de contenção (tenancy @> caller_map)
+    DB-->>API: Dados com escopo isolado
+    API-->>Client: Resposta isolada por tenant
