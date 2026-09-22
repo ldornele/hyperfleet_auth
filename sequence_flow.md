@@ -1,4 +1,7 @@
-HyperFleet Gateway: Request FlowThis diagram illustrates the complete request flow in edge+api mode, demonstrating early header mutation, validation by Authorino, the generation of the wristband (JWT), and database tenancy isolation.sequenceDiagram
+# HyperFleet Gateway: Request Flow
+
+```mermaid
+sequenceDiagram
     autonumber
     participant Client
     participant Envoy as Envoy Gateway
