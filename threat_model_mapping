@@ -1,0 +1,49 @@
+# Threat Model Mapping: HyperFleet Auth & Tenancy
+
+
+```mermaid
+graph LR
+    subgraph Threats
+        T1(No credential, or unknown issuer token)
+        T2(Valid SA token from unlisted service account)
+        T3(Human token without required tenant claim)
+        T4(Client forges tenant headers via Envoy)
+        T5(Pod bypasses Envoy and calls API without credential)
+        T6(Pod forges tenant headers using its own wristband)
+        T7(Token read in transit inside the cluster)
+        T8(Envoy pointed at impostor Authorino/API)
+    end
+
+    subgraph Mitigation Controls
+        C1[Authorino denies at gateway]
+        C2[Exact allow-list in TokenReview]
+        C3[Required-claim rule at gateway]
+        C4[Envoy early header mutation strips them]
+        C5[API requires wristband / NetworkPolicy]
+        C6[Tenancy sourced from signed wristband claims]
+        C7[TLS on both in-cluster hops]
+        C8[CA validation on transport sockets]
+    end
+
+    subgraph Required Mode
+        M_Edge[Mode: edge]
+        M_EdgeAPI[Mode: edge+api]
+        M_TLS[Tickets: 1648 and 1635]
+    end
+
+    T1 -->|Prevented by| C1 --> M_Edge
+    T2 -->|Prevented by| C2 --> M_Edge
+    T3 -->|Prevented by| C3 --> M_Edge
+    T4 -->|Prevented by| C4 --> M_Edge
+    T5 -->|Prevented by| C5 --> M_EdgeAPI
+    T6 -->|Prevented by| C6 --> M_EdgeAPI
+    T7 -->|Prevented by| C7 --> M_TLS
+    T8 -->|Prevented by| C8 --> M_TLS
+    
+    classDef threat fill:#ffebee,stroke:#ff5252,stroke-width:2px;
+    classDef control fill:#e8f5e9,stroke:#4caf50,stroke-width:2px;
+    classDef mode fill:#e3f2fd,stroke:#2196f3,stroke-width:2px;
+    
+    class T1,T2,T3,T4,T5,T6,T7,T8 threat;
+    class C1,C2,C3,C4,C5,C6,C7,C8 control;
+    class M_Edge,M_EdgeAPI,M_TLS mode;
