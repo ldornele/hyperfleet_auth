@@ -1,4 +1,4 @@
-# HyperFleet Gateway: Request Flow
+# HyperFleet Gateway: Decision Tree - Scheme Convention & Validation
 
 Este diagrama ilustra o fluxo completo de uma requisição no modo `edge+api`, demonstrando a mutação de cabeçalhos, a validação pelo Authorino, a geração do *wristband* (JWT) e o isolamento de *tenancy* no banco de dados.
 
